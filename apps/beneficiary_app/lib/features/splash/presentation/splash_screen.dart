@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:beneficiary_app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -11,16 +12,25 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
 
-    Timer(AppConstants.splashDuration, () {
-      if (!mounted) return;
+    _timer = Timer(AppConstants.splashDuration, _goToLanguageSelection);
+  }
 
-      // Language selection will be added in Step 2.
-      // For now, we simply keep the splash screen visible.
-    });
+  void _goToLanguageSelection() {
+    if (!mounted) return;
+
+    context.go('/language');
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
