@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multilingual Voice Assistant</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f9fafb; color: #111827; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        h1 { font-size: 24px; margin-top: 0; }
+        .subtitle { color: #6b7280; font-size: 14px; margin-bottom: 20px; }
+        
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        button { padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        #startBtn { background: #3b82f6; color: white; }
+        #startBtn:hover { background: #2563eb; }
+        #stopBtn { background: #ef4444; color: white; display: none; }
+        #stopBtn:hover { background: #dc2626; }
+        
+        .status-box { padding: 10px; background: #f3f4f6; border-radius: 6px; font-weight: 500; margin-bottom: 20px; text-align: center; }
+        .timer { font-size: 24px; font-family: monospace; text-align: center; margin-bottom: 10px; display: none; }
+        
+        .section { margin-bottom: 20px; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; }
+        .section-title { font-size: 14px; text-transform: uppercase; color: #6b7280; font-weight: bold; margin-bottom: 15px; }
+        
+        select { padding: 10px; border-radius: 6px; border: 1px solid #ccc; width: 100%; max-width: 250px; margin-bottom: 10px; }
+        
+        .result-group { margin-bottom: 15px; }
+        .result-label { font-size: 12px; color: #6b7280; font-weight: bold; margin-bottom: 5px; }
+        .result-value { background: #f3f4f6; padding: 15px; border-radius: 6px; font-size: 15px; }
+        
+        .tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 13px; margin-right: 5px; margin-bottom: 5px; font-weight: 500;}
+        .tag-success { background: #dcfce3; color: #166534; }
+        .tag-pending { background: #fef08a; color: #854d0e; }
+        .tag-error { background: #fee2e2; color: #dc2626; }
+        
+        .error { color: #dc2626; background: #fee2e2; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: none; border: 1px solid #fecaca; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Multilingual Voice Assistant</h1>
+    <p class="subtitle">Phase 2 - STT → Groq AI → TTS</p>
+
+    <div id="errorBox" class="error"></div>
+    <div id="timer" class="timer">00:00</div>
+    <div id="statusText" class="status-box">Ready</div>
+
+    <div class="section">
+        <div class="section-title">Language Preferences</div>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div>
+                <label class="result-label">Spoken Language</label><br>
+                <select id="spokenLangSelect">
+                    <option value="auto">Auto Detect ▼</option>
+                    <option value="hi">Hindi</option>
+                    <option value="bho">Bhojpuri</option>
+                    <option value="mai">Maithili</option>
+                    <option value="bn">Bengali</option>
+                    <option value="sat">Santali</option>
+                    <option value="en">English</option>
+                    <option value="ta">Tamil</option>
+                    <option value="te">Telugu</option>
+                    <option value="kn">Kannada</option>
+                    <option value="ml">Malayalam</option>
+                    <option value="mr">Marathi</option>
+                    <option value="gu">Gujarati</option>
+                    <option value="pa">Punjabi</option>
+                    <option value="or">Odia</option>
+                    <option value="as">Assamese</option>
+                    <option value="ur">Urdu</option>
+                    <option value="kok">Konkani</option>
+                    <option value="mni">Manipuri</option>
+                    <option value="ne">Nepali</option>
+                </select>
+            </div>
+            <div>
+                <label class="result-label">Assistant Voice</label><br>
+                <select id="assistantLangSelect">
+                    <option value="hi">Hindi</option>
+                    <option value="en">English</option>
+                    <option value="bn">Bengali</option>
+                    <option value="mai">Maithili</option>
+                    <option value="bho">Bhojpuri</option>
+                    <option value="sat">Santali</option>
+                    <option value="ta">Tamil</option>
+                    <option value="te">Telugu</option>
+                    <option value="kn">Kannada</option>
+                    <option value="ml">Malayalam</option>
+                    <option value="mr">Marathi</option>
+                    <option value="gu">Gujarati</option>
+                    <option value="pa">Punjabi</option>
+                    <option value="or">Odia</option>
+                    <option value="as">Assamese</option>
+                    <option value="ur">Urdu</option>
+                    <option value="kok">Konkani</option>
+                    <option value="mni">Manipuri</option>
+                    <option value="ne">Nepali</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls" style="justify-content: center;">
+        <button id="startBtn">Start Speaking 🎙️</button>
+        <button id="stopBtn">Stop Recording ⏹️</button>
+    </div>
+    
+    <div class="section" id="resultsArea" style="display: none;">
+        <div class="section-title" style="display: flex; justify-content: space-between;">
+            <span>Voice Agent Conversation</span>
+            <span id="sessionStatusBadge" class="tag tag-pending">Collecting</span>
+        </div>
+        
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <!-- Left: Chat -->
+            <div style="flex: 1; min-width: 300px;">
+        
+        <div class="result-group">
+            <div class="result-label" style="display: flex; justify-content: space-between; align-items: center;">
+                USER
+                <div>
+                    <button id="translateBtn" style="display: none; background: #6b7280; color: white; padding: 4px 8px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer;">Translate ⇄</button>
+                    <button id="transliterateBtn" style="display: none; background: #4b5563; color: white; padding: 4px 8px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; margin-left: 5px;">Transliterate 🔠</button>
+                </div>
+            </div>
+            <div class="result-value" id="userTranscript"></div>
+            
+            <div id="transliterateArea" style="display: none; margin-top: 10px; padding: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
+                <div id="tlStatus" class="tag tag-pending" style="display: none;">Transliterating...</div>
+                <div id="transliteratedText" style="font-size: 14px; font-weight: 500; color: #166534;"></div>
+            </div>
+            
+            <div id="translateArea" style="display: none; margin-top: 10px; padding: 10px; background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 6px;">
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                    <select id="nmtSource" style="padding: 4px; font-size: 12px; max-width: 120px; margin: 0;"></select>
+                    <span>→</span>
+                    <select id="nmtTarget" style="padding: 4px; font-size: 12px; max-width: 120px; margin: 0;">
+                        <option value="en">English</option>
+                        <option value="hi">Hindi</option>
+                    </select>
+                </div>
+                <div id="nmtStatus" class="tag tag-pending" style="display: none;">Translating...</div>
+                <div id="translatedText" style="font-size: 14px; font-weight: 500; color: #831843;"></div>
+            </div>
+        </div>
+        
+        <div class="result-group">
+            <div class="result-label">ASSISTANT</div>
+            <div class="result-value" id="assistantResponse" style="margin-bottom: 10px;"></div>
+            <button id="playBtn" style="display: none; background: #10b981; color: white;">Play Audio 🔊</button>
+            <audio id="audioPlayer" style="display: none;"></audio>
+        </div>
+    </div>
+    
+            </div>
+            
+            <!-- Right: Collected Profile -->
+            <div style="flex: 1; min-width: 300px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
+                <div class="result-label" style="margin-bottom: 15px; color: #334155; font-size: 14px;">COLLECTED INFORMATION</div>
+                
+                <div style="font-size: 13px; color: #475569;">
+                    <div style="margin-bottom: 8px;"><strong>Occupation:</strong> <span id="profOcc">-</span></div>
+                    <div style="margin-bottom: 8px;"><strong>Skills:</strong> <div id="profSkills" style="margin-left: 10px; color: #15803d;">-</div></div>
+                    <div style="margin-bottom: 8px;"><strong>Experience:</strong> <span id="profExp">-</span></div>
+                    <div style="margin-bottom: 8px;"><strong>Monthly Income:</strong> <span id="profInc">-</span></div>
+                    <div style="margin-bottom: 8px;"><strong>Certifications:</strong> <div id="profCert" style="margin-left: 10px; color: #15803d;">-</div></div>
+                    <div style="margin-bottom: 8px;"><strong>Relocation Willing:</strong> <span id="profReloc">-</span></div>
+                    
+                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #cbd5e1; color: #b91c1c;">
+                        <strong>Missing Information:</strong>
+                        <ul id="profMissing" style="margin-top: 5px; padding-left: 20px;"></ul>
+                    </div>
+                    
+                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #cbd5e1; color: #0369a1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong>AI Understanding:</strong>
+                            <span id="confOverall" style="font-weight: bold; font-size: 14px;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong>Profile Completeness:</strong>
+                            <span id="confCompleteness" style="font-weight: bold; font-size: 14px;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px;">
+                            <span>Speech Recognition</span>
+                            <span id="confASR">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px;">
+                            <span>Language Detection</span>
+                            <span id="confALD">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px;">
+                            <span>Extraction</span>
+                            <span id="confExtraction">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span>Skill Normalization</span>
+                            <span id="confSkill">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="pipelineArea" style="display: none;">
+        <div class="section-title">Processing Pipeline</div>
+        <div id="pipelineStatus">
+            <span class="tag tag-pending" id="statusASR">ASR</span>
+            <span class="tag tag-pending" id="statusALD">ALD</span>
+            <span class="tag tag-pending" id="statusAI">AI Agent</span>
+            <span class="tag tag-pending" id="statusTTS">TTS</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Document OCR (Printed Text)</div>
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+            <input type="file" id="ocrInput" accept="image/jpeg, image/png, image/webp" style="max-width: 200px;">
+            <select id="ocrLang" style="margin: 0; max-width: 150px;">
+                <option value="hi">Hindi</option>
+                <option value="en">English</option>
+                <option value="bn">Bengali</option>
+            </select>
+            <button id="ocrBtn" style="background: #8b5cf6; color: white;">Run OCR 📄</button>
+        </div>
+        
+        <div id="ocrStatus" class="tag tag-pending" style="display: none;">Processing...</div>
+        
+        <div class="result-group" id="ocrResultGroup" style="display: none; margin-top: 15px;">
+            <div class="result-label">OCR Result</div>
+            <div class="result-value" id="ocrOutput" style="user-select: text; white-space: pre-wrap;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let startTime;
+    let timerInterval;
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const statusText = document.getElementById('statusText');
+    const timerDisplay = document.getElementById('timer');
+    const resultsArea = document.getElementById('resultsArea');
+    const pipelineArea = document.getElementById('pipelineArea');
+    const errorBox = document.getElementById('errorBox');
+    
+    let sessionId = crypto.randomUUID();
+
+    function formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        const secs = (totalSeconds % 60).toString().padStart(2, '0');
+        return `${mins}:${secs}`;
+    }
+
+    let isRecording = false;
+    let isAgentRequestInFlight = false;
+    let conversationCompleted = false;
+
+    startBtn.onclick = async () => {
+        if (conversationCompleted) {
+            // "Start New Conversation" was clicked — only reset state, do NOT start recording.
+            sessionId = "sess_" + Date.now().toString();
+            conversationCompleted = false;
+            isAgentRequestInFlight = false;
+            isRecording = false;
+            
+            // Reset profile UI
+            startBtn.innerText = 'Reply 🎙️';
+            startBtn.className = 'btn btn-primary';
+            startBtn.style.backgroundColor = '';
+            startBtn.disabled = false;
+            document.getElementById('profOcc').innerText = '-';
+            document.getElementById('profExp').innerText = '-';
+            document.getElementById('profInc').innerText = '-';
+            document.getElementById('profReloc').innerText = '-';
+            document.getElementById('profSkills').innerText = '-';
+            document.getElementById('profCert').innerText = '-';
+            document.getElementById('profMissing').innerHTML = '';
+            document.getElementById('sessionStatusBadge').className = 'tag tag-pending';
+            document.getElementById('sessionStatusBadge').innerText = 'New Session';
+            document.getElementById('confOverall').innerText = '-';
+            document.getElementById('confCompleteness').innerText = '-';
+            document.getElementById('confASR').innerText = '-';
+            document.getElementById('confALD').innerText = '-';
+            document.getElementById('confExtraction').innerText = '-';
+            document.getElementById('confSkill').innerText = '-';
+            resultsArea.style.display = 'none';
+            pipelineArea.style.display = 'none';
+            errorBox.style.display = 'none';
+            statusText.innerText = '';
+            
+            // Stop here. The user must explicitly click "Reply 🎙️" to begin the new conversation.
+            return;
+        }
+
+        if (isRecording || isAgentRequestInFlight) return;
+        
+        isRecording = true;
+        isAgentRequestInFlight = true;
+        startBtn.disabled = true;
+        
+        errorBox.style.display = 'none';
+        resultsArea.style.display = 'none';
+        pipelineArea.style.display = 'none';
+        
+        ['statusASR', 'statusALD', 'statusAI', 'statusTTS'].forEach(id => {
+            const el = document.getElementById(id);
+            el.className = 'tag tag-pending';
+            el.innerText = id.replace('status', '');
+        });
+        
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+            mediaRecorder.onstart = () => {
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'block';
+                timerDisplay.style.display = 'block';
+                statusText.innerText = 'Listening...';
+                startTime = Date.now();
+                timerInterval = setInterval(() => timerDisplay.innerText = formatTime(Date.now() - startTime), 1000);
+            };
+            mediaRecorder.onstop = async () => {
+                clearInterval(timerInterval);
+                isRecording = false; // Microphone is off, but request is still in flight
+                // Do NOT unlock startBtn here!
+                timerDisplay.style.display = 'none';
+                stopBtn.style.display = 'none';
+                statusText.innerText = 'Processing via Bhashini & Groq...';
+                stream.getTracks().forEach(t => t.stop());
+                
+                pipelineArea.style.display = 'block';
+                await processAudio(new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' }));
+            };
+            mediaRecorder.start();
+        } catch (err) {
+            isRecording = false;
+            startBtn.disabled = false;
+            errorBox.innerText = "Microphone error: " + err.message;
+            errorBox.style.display = 'block';
+        }
+    };
+
+    stopBtn.onclick = () => {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    };
+
+    async function processAudio(blob) {
+        if (conversationCompleted) {
+            isAgentRequestInFlight = false;
+            startBtn.disabled = false;
+            return;
+        }
+        const formData = new FormData();
+        formData.append("audio", blob, "recording.webm");
+        
+        const spoken = document.getElementById("spokenLangSelect").value;
+        const assistant = document.getElementById("assistantLangSelect").value;
+        
+        formData.append("spoken_language", spoken);
+        formData.append("assistant_language", assistant);
+        formData.append("session_id", sessionId);
+        const reqId = Date.now().toString() + Math.random().toString();
+        formData.append("request_id", reqId);
+
+        try {
+            document.getElementById("statusALD").className = "tag tag-success";
+            document.getElementById("statusASR").className = "tag tag-success";
+            
+            const response = await fetch("/api/voice/agent", { method: "POST", body: formData });
+            const data = await response.json();
+            
+            if (!response.ok) throw new Error(data.message || "Unknown API Error");
+            
+            document.getElementById("statusAI").className = "tag tag-success";
+            
+            document.getElementById('userTranscript').innerText = data.user.transcript;
+            
+            // Setup Translation Button
+            const tBtn = document.getElementById('translateBtn');
+            const nmtSource = document.getElementById('nmtSource');
+            
+            nmtSource.innerHTML = `<option value="${data.user.language_code}">${data.user.language_code.toUpperCase()}</option>`;
+            document.getElementById('translateArea').style.display = 'none';
+            document.getElementById('translatedText').innerText = '';
+            
+            tBtn.style.display = 'inline-block';
+            
+            const tlBtn = document.getElementById('transliterateBtn');
+            document.getElementById('transliterateArea').style.display = 'none';
+            document.getElementById('transliteratedText').innerText = '';
+            
+            tlBtn.style.display = 'inline-block';
+            tlBtn.onclick = async () => {
+                document.getElementById('transliterateArea').style.display = 'block';
+                const statusEl = document.getElementById('tlStatus');
+                statusEl.style.display = 'inline-block';
+                statusEl.className = 'tag tag-pending';
+                statusEl.innerText = 'Transliterating...';
+                document.getElementById('transliteratedText').innerText = '';
+                
+                try {
+                    const tlResp = await fetch("/api/voice/transliterate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            text: data.user.transcript,
+                            source_language: document.getElementById('nmtSource').value,
+                            target_language: "en"
+                        })
+                    });
+                    const tlData = await tlResp.json();
+                    if (!tlResp.ok) throw new Error(tlData.message);
+                    
+                    statusEl.className = 'tag tag-success';
+                    statusEl.innerText = 'Transliteration ✓';
+                    document.getElementById('transliteratedText').innerText = tlData.transliterated_text;
+                } catch (e) {
+                    statusEl.className = 'tag tag-error';
+                    statusEl.innerText = 'Transliteration Failed';
+                }
+            };
+
+            tBtn.onclick = async () => {
+                document.getElementById('translateArea').style.display = 'block';
+                const statusEl = document.getElementById('nmtStatus');
+                statusEl.style.display = 'inline-block';
+                statusEl.className = 'tag tag-pending';
+                statusEl.innerText = 'Translating...';
+                document.getElementById('translatedText').innerText = '';
+                
+                try {
+                    const tResp = await fetch("/api/voice/translate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            text: data.user.transcript,
+                            source_language: document.getElementById('nmtSource').value,
+                            target_language: document.getElementById('nmtTarget').value
+                        })
+                    });
+                    const tData = await tResp.json();
+                    if (!tResp.ok) throw new Error(tData.message);
+                    
+                    statusEl.className = 'tag tag-success';
+                    statusEl.innerText = 'Translation ✓';
+                    document.getElementById('translatedText').innerText = tData.translated_text;
+                } catch (e) {
+                    statusEl.className = 'tag tag-error';
+                    statusEl.innerText = 'Translation Failed';
+                }
+            };
+
+            document.getElementById('assistantResponse').innerText = data.assistant.text;
+            
+            // Update Profile UI
+            const profile = data.profile || {};
+            document.getElementById('profOcc').innerText = profile.occupation || '-';
+            document.getElementById('profExp').innerText = profile.experience_years ? profile.experience_years + ' years' : '-';
+            document.getElementById('profInc').innerText = profile.income_monthly ? '₹' + profile.income_monthly : '-';
+            document.getElementById('profReloc').innerText = profile.relocation_willing === null ? '-' : (profile.relocation_willing ? 'Yes' : 'No');
+            
+            const skillsEl = document.getElementById('profSkills');
+            skillsEl.innerHTML = '';
+            if (profile.skills && profile.skills.length > 0) {
+                profile.skills.forEach(s => {
+                    const d = document.createElement('div');
+                    d.innerText = '✓ ' + s;
+                    skillsEl.appendChild(d);
+                });
+            } else {
+                skillsEl.innerText = '-';
+            }
+            
+            const certEl = document.getElementById('profCert');
+            certEl.innerHTML = '';
+            if (profile.certifications && profile.certifications.length > 0) {
+                profile.certifications.forEach(c => {
+                    const d = document.createElement('div');
+                    d.innerText = '✓ ' + c;
+                    certEl.appendChild(d);
+                });
+            } else {
+                certEl.innerText = '-';
+            }
+            
+            const missingEl = document.getElementById('profMissing');
+            missingEl.innerHTML = '';
+            if (data.missing_fields && data.missing_fields.length > 0) {
+                data.missing_fields.forEach(f => {
+                    const li = document.createElement('li');
+                    li.innerText = f.replace('_', ' ');
+                    missingEl.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.innerText = 'None — profile complete';
+                missingEl.appendChild(li);
+            }
+            
+            const badge = document.getElementById('sessionStatusBadge');
+            if (data.status === 'completed') {
+                badge.className = 'tag tag-success';
+                badge.innerText = '✓ Profile Confirmed';
+            } else if (data.status === 'awaiting_confirmation') {
+                badge.className = 'tag tag-pending';
+                badge.innerText = 'Awaiting Confirmation';
+            } else {
+                badge.className = 'tag tag-pending';
+                badge.innerText = 'Collecting...';
+            }
+            
+            // Update AI Understanding UI
+            if (data.confidence) {
+                const overallStr = data.confidence.overall !== null ? data.confidence.overall + '% (' + data.confidence.label + ')' : 'N/A';
+                document.getElementById('confOverall').innerText = overallStr;
+                
+                const c = data.confidence.components;
+                document.getElementById('confCompleteness').innerText = c.profile_completeness !== null ? c.profile_completeness + '%' : 'N/A';
+                
+                document.getElementById('confASR').innerText = c.speech_recognition !== null ? c.speech_recognition + '%' : 'N/A';
+                document.getElementById('confALD').innerText = c.language_detection !== null ? c.language_detection + '%' : 'N/A';
+                document.getElementById('confExtraction').innerText = c.extraction_confidence !== null ? c.extraction_confidence + '%' : 'N/A';
+                document.getElementById('confSkill').innerText = c.skill_normalization !== null ? c.skill_normalization + '%' : 'N/A';
+            }
+            
+            const playBtn = document.getElementById('playBtn');
+            const audioPlayer = document.getElementById('audioPlayer');
+            playBtn.style.display = 'none';
+            
+            if (data.tts.audio_base64) {
+                document.getElementById("statusTTS").className = "tag tag-success";
+                
+                const byteCharacters = atob(data.tts.audio_base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const audioBlob = new Blob([byteArray], {type: data.tts.content_type});
+                audioPlayer.src = URL.createObjectURL(audioBlob);
+                
+                playBtn.style.display = 'inline-block';
+                playBtn.onclick = () => audioPlayer.play();
+                
+                audioPlayer.play().catch(e => console.log("Auto-play blocked"));
+            } else {
+                document.getElementById("statusTTS").className = "tag tag-error";
+                document.getElementById("statusTTS").innerText = "TTS Failed: " + (data.tts.error || "Unavailable");
+            }
+
+            statusText.innerText = 'Complete';
+            resultsArea.style.display = 'block';
+            startBtn.style.display = 'block';
+            
+            if (data.status === 'completed') {
+                conversationCompleted = true;
+                startBtn.innerText = 'Start New Conversation';
+                startBtn.className = 'btn';
+                startBtn.style.backgroundColor = '#10b981'; // distinct color
+                startBtn.disabled = false;
+                isAgentRequestInFlight = false;
+            } else {
+                startBtn.innerText = 'Reply 🎙️';
+                startBtn.disabled = false;
+                isAgentRequestInFlight = false;
+            }
+            
+        } catch (err) {
+            statusText.innerText = 'Failed';
+            errorBox.innerText = "Pipeline Error: " + err.message;
+            errorBox.style.display = 'block';
+            
+            startBtn.style.display = 'block';
+            startBtn.disabled = false;
+            isAgentRequestInFlight = false;
+        }
+    }
+
+    // OCR Logic
+    const ocrBtn = document.getElementById('ocrBtn');
+    ocrBtn.onclick = async () => {
+        const fileInput = document.getElementById('ocrInput');
+        if (!fileInput.files.length) {
+            alert('Please select an image file first.');
+            return;
+        }
+        
+        const ocrStatus = document.getElementById('ocrStatus');
+        const ocrResultGroup = document.getElementById('ocrResultGroup');
+        const ocrOutput = document.getElementById('ocrOutput');
+        
+        ocrStatus.style.display = 'inline-block';
+        ocrStatus.className = 'tag tag-pending';
+        ocrStatus.innerText = 'Extracting Text...';
+        ocrResultGroup.style.display = 'none';
+        
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        formData.append('source_language', document.getElementById('ocrLang').value);
+        
+        try {
+            const resp = await fetch('/api/voice/ocr', { method: 'POST', body: formData });
+            const data = await resp.json();
+            
+            if (!resp.ok) throw new Error(data.message || data.error_code);
+            
+            ocrStatus.className = 'tag tag-success';
+            ocrStatus.innerText = 'OCR Complete ✓';
+            ocrOutput.innerText = data.text;
+            ocrResultGroup.style.display = 'block';
+        } catch (e) {
+            ocrStatus.className = 'tag tag-error';
+            ocrStatus.innerText = 'OCR Failed: ' + e.message;
+        }
+    };
+
+</script>
+
+</body>
+</html>

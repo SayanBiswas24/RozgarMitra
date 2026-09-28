@@ -1,0 +1,44 @@
+# Secret files – never commit these
+.env
+*.env.local
+*.env.*.local
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Temporary audio uploads (if ever used)
+uploads/
+tmp_audio/
+
+# Logs
+*.log
+logs/

@@ -1,0 +1,43 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# PS-97 Voice Processing Module – Python Dependencies
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Install:   pip install -r requirements.txt
+# Run:       uvicorn app.main:app --reload
+# Test:      pytest tests/
+
+# Web framework
+fastapi>=0.111.0,<1.0.0
+uvicorn[standard]>=0.29.0,<1.0.0
+
+# Data validation
+pydantic>=2.7.0,<3.0.0
+
+# Environment configuration
+python-dotenv>=1.0.0,<2.0.0
+
+# HTTP client for external API calls (BHASHINI)
+httpx>=0.27.0,<1.0.0
+
+# Multipart form upload support (required by FastAPI for File uploads)
+python-multipart>=0.0.9,<1.0.0
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Testing
+# ─────────────────────────────────────────────────────────────────────────────
+
+pytest>=8.0.0,<9.0.0
+pytest-asyncio>=0.23.0,<1.0.0
+httpx>=0.27.0,<1.0.0   # also used as async test client
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Future additions (do NOT add yet — see README)
+# ─────────────────────────────────────────────────────────────────────────────
+# python-magic   – magic-byte MIME validation (more secure than Content-Type header)
+# pydub          – audio duration measurement
+# aiofiles       – async file I/O if disk storage is ever needed
+
+# Database
+sqlalchemy>=2.0.0,<2.1.0
+aiosqlite>=0.20.0,<1.0.0
+asyncpg>=0.29.0,<1.0.0
