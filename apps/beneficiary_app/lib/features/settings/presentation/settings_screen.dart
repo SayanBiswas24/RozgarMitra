@@ -1,82 +1,90 @@
+import 'package:beneficiary_app/core/localization/app_languages.dart';
+import 'package:beneficiary_app/core/preferences/app_settings_scope.dart';
+import 'package:beneficiary_app/core/widgets/app_logo.dart';
+import 'package:beneficiary_app/l10n/app_localizations.dart';
 import 'package:beneficiary_app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
+  void _showLanguagePicker(BuildContext context) {
+    final settings = AppSettingsScope.of(context);
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool _darkMode = false;
-  bool _notifications = true;
-  bool _voiceResponses = true;
-
-  String _selectedLanguage = 'English';
-
-  final List<String> _languages = [
-    'English',
-    'हिन्दी',
-    'বাংলা',
-    'ᱥᱟᱱᱛᱟᱲᱤ',
-    'Mundari',
-  ];
-
-  void _showLanguagePicker() {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
-      builder: (context) {
+      isScrollControlled: true,
+      backgroundColor: theme.bottomSheetTheme.backgroundColor,
+      builder: (bottomSheetContext) {
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Choose your language',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'You can change this anytime.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(bottomSheetContext).height * 0.80,
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n?.chooseLanguage ?? 'Choose your language',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                ..._languages.map((language) {
-                  final isSelected = language == _selectedLanguage;
-
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      isSelected
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_off,
-                      color: isSelected
-                          ? AppColors.primary
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n?.changeLanguageNotice ?? 'You can change this anytime.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    title: Text(
-                      language,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        _selectedLanguage = language;
-                      });
+                  ),
+                  const SizedBox(height: 16),
+                  ...AppLanguages.supported.map((language) {
+                    final isSelected =
+                        language.locale.languageCode == settings.locale.languageCode;
 
-                      Navigator.pop(context);
-                    },
-                  );
-                }),
-              ],
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                      leading: Icon(
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_off,
+                        color: isSelected
+                            ? primaryColor
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      title: Text(
+                        language.nativeName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? primaryColor : null,
+                        ),
+                      ),
+                      subtitle: Text(
+                        language.name,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      trailing: isSelected
+                          ? Icon(Icons.check_rounded, color: primaryColor, size: 20)
+                          : null,
+                      onTap: () {
+                        settings.setLocale(language.locale);
+                        Navigator.pop(bottomSheetContext);
+                      },
+                    );
+                  }),
+                ],
+              ),
             ),
           ),
         );
@@ -84,21 +92,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showAboutDialog() {
+  void _showAboutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
     showAboutDialog(
       context: context,
-      applicationName: 'Kaushal Saathi',
+      applicationName: l10n?.appName ?? 'Kaushal Saathi',
       applicationVersion: '1.0.0',
-      applicationIcon: const Icon(
-        Icons.handshake_rounded,
-        color: AppColors.primary,
-        size: 42,
+      applicationIcon: const AppLogo(
+        size: 48,
+        borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
-      children: const [
+      children: [
         Text(
-          'Kaushal Saathi helps you discover suitable skills, '
-          'training and livelihood opportunities based on your '
-          'interests and local opportunities.',
+          l10n?.aboutDescription ??
+              'Kaushal Saathi helps you discover suitable skills, training and livelihood opportunities based on your interests and local opportunities under PM-AJAY.',
+          style: theme.textTheme.bodyMedium,
         ),
       ],
     );
@@ -106,63 +116,78 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = AppSettingsScope.of(context);
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
+    final currentLang = settings.currentLanguage;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l10n?.settings ?? 'Settings')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         children: [
-          _buildSectionTitle(context, 'Preferences'),
+          _buildSectionTitle(context, l10n?.preferences ?? 'Preferences'),
           const SizedBox(height: 8),
 
           _buildSettingsCard(
             context,
             children: [
               ListTile(
-                leading: const Icon(Icons.language_rounded),
-                title: const Text(
-                  'Language',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                leading: Icon(Icons.language_rounded, color: primaryColor),
+                title: Text(
+                  l10n?.language ?? 'Language',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: Text(_selectedLanguage),
+                subtitle: Text('${currentLang.nativeName} (${currentLang.name})'),
                 trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: _showLanguagePicker,
+                onTap: () => _showLanguagePicker(context),
               ),
 
               const Divider(height: 1),
 
               SwitchListTile(
-                secondary: const Icon(Icons.dark_mode_outlined),
-                title: const Text(
-                  'Dark mode',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                secondary: Icon(
+                  isDark ? Icons.dark_mode_rounded : Icons.dark_mode_outlined,
+                  color: primaryColor,
                 ),
-                subtitle: const Text('Use a darker appearance'),
-                value: _darkMode,
-                activeTrackColor: AppColors.primary,
+                title: Text(
+                  l10n?.darkMode ?? 'Dark mode',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  l10n?.useDarkAppearance ?? 'Use a darker appearance',
+                ),
+                value: settings.isDarkMode,
+                activeTrackColor: primaryColor,
                 onChanged: (value) {
-                  setState(() {
-                    _darkMode = value;
-                  });
+                  settings.setThemeMode(
+                    value ? ThemeMode.dark : ThemeMode.light,
+                  );
                 },
               ),
 
               const Divider(height: 1),
 
               SwitchListTile(
-                secondary: const Icon(Icons.notifications_none_rounded),
-                title: const Text(
-                  'Notifications',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                secondary: Icon(
+                  Icons.notifications_none_rounded,
+                  color: primaryColor,
                 ),
-                subtitle: const Text(
-                  'Get updates about training and opportunities',
+                title: Text(
+                  l10n?.notifications ?? 'Notifications',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                value: _notifications,
-                activeTrackColor: AppColors.primary,
+                subtitle: Text(
+                  l10n?.notificationsSubtitle ??
+                      'Get updates about training and opportunities',
+                ),
+                value: settings.notificationsEnabled,
+                activeTrackColor: primaryColor,
                 onChanged: (value) {
-                  setState(() {
-                    _notifications = value;
-                  });
+                  settings.setNotifications(value);
                 },
               ),
             ],
@@ -170,50 +195,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 28),
 
-          _buildSectionTitle(context, 'Voice Assistant'),
+          _buildSectionTitle(context, l10n?.voiceAssistant ?? 'Voice Assistant'),
           const SizedBox(height: 8),
 
           _buildSettingsCard(
             context,
             children: [
               SwitchListTile(
-                secondary: const Icon(Icons.volume_up_outlined),
-                title: const Text(
-                  'Voice responses',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                secondary: Icon(Icons.volume_up_outlined, color: primaryColor),
+                title: Text(
+                  l10n?.voiceResponses ?? 'Voice responses',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: const Text('Let Saathi speak responses aloud'),
-                value: _voiceResponses,
-                activeTrackColor: AppColors.primary,
+                subtitle: Text(
+                  l10n?.voiceResponsesSubtitle ??
+                      'Let Saathi speak responses aloud',
+                ),
+                value: settings.voiceResponsesEnabled,
+                activeTrackColor: primaryColor,
                 onChanged: (value) {
-                  setState(() {
-                    _voiceResponses = value;
-                  });
+                  settings.setVoiceResponses(value);
                 },
               ),
 
               const Divider(height: 1),
 
               ListTile(
-                leading: const Icon(Icons.record_voice_over_outlined),
-                title: const Text(
-                  'Voice language',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                leading: Icon(
+                  Icons.record_voice_over_outlined,
+                  color: primaryColor,
                 ),
-                subtitle: Text(_selectedLanguage),
+                title: Text(
+                  l10n?.voiceLanguage ?? 'Voice language',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text('${currentLang.nativeName} (${currentLang.name})'),
                 trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: _showLanguagePicker,
+                onTap: () => _showLanguagePicker(context),
               ),
 
               const Divider(height: 1),
 
               ListTile(
-                leading: const Icon(Icons.speed_outlined),
-                title: const Text(
-                  'Voice speed',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                leading: Icon(Icons.speed_outlined, color: primaryColor),
+                title: Text(
+                  l10n?.voiceSpeed ?? 'Voice speed',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: const Text('Normal'),
+                subtitle: Text(l10n?.normal ?? 'Normal'),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -230,32 +259,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 28),
 
-          _buildSectionTitle(context, 'Information'),
+          _buildSectionTitle(context, l10n?.information ?? 'Information'),
           const SizedBox(height: 8),
 
           _buildSettingsCard(
             context,
             children: [
               ListTile(
-                leading: const Icon(Icons.info_outline_rounded),
-                title: const Text(
-                  'About Kaushal Saathi',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                leading: Icon(Icons.info_outline_rounded, color: primaryColor),
+                title: Text(
+                  l10n?.aboutKaushalSaathi ?? 'About Kaushal Saathi',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: const Text('Learn more about the application'),
+                subtitle: Text(
+                  l10n?.aboutSubtitle ?? 'Learn more about the application',
+                ),
                 trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: _showAboutDialog,
+                onTap: () => _showAboutDialog(context),
               ),
 
               const Divider(height: 1),
 
               ListTile(
-                leading: const Icon(Icons.help_outline_rounded),
-                title: const Text(
-                  'Help and support',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                leading: Icon(Icons.help_outline_rounded, color: primaryColor),
+                title: Text(
+                  l10n?.helpSupport ?? 'Help and support',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: const Text('Get help using Kaushal Saathi'),
+                subtitle: Text(
+                  l10n?.helpSupportSubtitle ?? 'Get help using Kaushal Saathi',
+                ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -269,12 +302,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Divider(height: 1),
 
               ListTile(
-                leading: const Icon(Icons.privacy_tip_outlined),
-                title: const Text(
-                  'Privacy',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                leading: Icon(Icons.privacy_tip_outlined, color: primaryColor),
+                title: Text(
+                  l10n?.privacy ?? 'Privacy',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: const Text('How your information is handled'),
+                subtitle: Text(
+                  l10n?.privacySubtitle ?? 'How your information is handled',
+                ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -291,9 +326,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           Center(
             child: Text(
-              'Kaushal Saathi • Version 1.0.0',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              l10n?.versionText ?? 'Kaushal Saathi • Version 1.0.0',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -303,10 +338,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        color: AppColors.primary,
+      style: theme.textTheme.titleMedium?.copyWith(
+        color: isDark ? AppColors.primaryLight : AppColors.primary,
         fontWeight: FontWeight.bold,
       ),
     );

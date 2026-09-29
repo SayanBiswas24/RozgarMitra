@@ -1,3 +1,4 @@
+import 'package:beneficiary_app/l10n/app_localizations.dart';
 import 'package:beneficiary_app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -11,21 +12,6 @@ class AssistantScreen extends StatefulWidget {
 class _AssistantScreenState extends State<AssistantScreen> {
   bool _isListening = false;
 
-  final List<ChatMessage> _messages = [
-    const ChatMessage(
-      message:
-          'Namaste! I am Saathi. I can help you find suitable skills, '
-          'training and livelihood opportunities.',
-      isAssistant: true,
-    ),
-    const ChatMessage(
-      message:
-          'Let us start by understanding what kind of work you are '
-          'interested in.',
-      isAssistant: true,
-    ),
-  ];
-
   void _toggleListening() {
     setState(() {
       _isListening = !_isListening;
@@ -34,6 +20,26 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
+    final messages = [
+      ChatMessage(
+        message: l10n?.saathiGreeting1 ??
+            'Namaste! I am Saathi. I can help you find suitable skills, '
+            'training and livelihood opportunities.',
+        isAssistant: true,
+      ),
+      ChatMessage(
+        message: l10n?.saathiGreeting2 ??
+            'Let us start by understanding what kind of work you are '
+            'interested in.',
+        isAssistant: true,
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 20,
@@ -43,26 +49,30 @@ class _AssistantScreenState extends State<AssistantScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.10),
+                color: primaryColor.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.support_agent_rounded,
-                color: AppColors.primary,
+                color: primaryColor,
                 size: 23,
               ),
             ),
             const SizedBox(width: 12),
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Saathi',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  l10n?.saathi ?? 'Saathi',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
                 Text(
-                  'Your livelihood assistant',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                  l10n?.livelihoodAssistant ?? 'Your livelihood assistant',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.normal,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -75,36 +85,41 @@ class _AssistantScreenState extends State<AssistantScreen> {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-              itemCount: _messages.length,
+              itemCount: messages.length,
               itemBuilder: (context, index) {
-                final message = _messages[index];
-
+                final message = messages[index];
                 return _ChatBubble(message: message);
               },
             ),
           ),
 
-          _buildListeningArea(context),
+          _buildListeningArea(context, l10n),
         ],
       ),
     );
   }
 
-  Widget _buildListeningArea(BuildContext context) {
+  Widget _buildListeningArea(BuildContext context, AppLocalizations? l10n) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: theme.colorScheme.surface,
         border: Border(
-          top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+          top: BorderSide(color: theme.colorScheme.outlineVariant),
         ),
       ),
       child: Column(
         children: [
           Text(
-            _isListening ? 'Listening...' : 'Tap the microphone and speak',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            _isListening
+                ? (l10n?.listening ?? 'Listening...')
+                : (l10n?.tapMicrophone ?? 'Tap the microphone and speak'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -118,11 +133,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
               width: _isListening ? 86 : 76,
               height: _isListening ? 86 : 76,
               decoration: BoxDecoration(
-                color: _isListening ? AppColors.primaryDark : AppColors.primary,
+                color: _isListening ? AppColors.primaryDark : primaryColor,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.25),
+                    color: primaryColor.withValues(alpha: 0.25),
                     blurRadius: _isListening ? 20 : 12,
                     spreadRadius: _isListening ? 5 : 2,
                   ),
@@ -130,7 +145,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
               ),
               child: Icon(
                 _isListening ? Icons.stop_rounded : Icons.mic_rounded,
-                color: Colors.white,
+                color: isDark ? Colors.black : Colors.white,
                 size: 34,
               ),
             ),
@@ -140,11 +155,12 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
           Text(
             _isListening
-                ? 'Tap again when you are finished'
-                : 'You can speak naturally in your selected language',
+                ? (l10n?.tapAgainToFinish ?? 'Tap again when you are finished')
+                : (l10n?.speakNaturallyNotice ??
+                    'You can speak naturally in your selected language'),
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -160,6 +176,9 @@ class _ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
     final isAssistant = message.isAssistant;
 
     return Align(
@@ -172,8 +191,8 @@ class _ChatBubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: isAssistant
-              ? Theme.of(context).colorScheme.surface
-              : AppColors.primary,
+              ? theme.colorScheme.surface
+              : primaryColor,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
@@ -181,7 +200,7 @@ class _ChatBubble extends StatelessWidget {
             bottomRight: Radius.circular(isAssistant ? 18 : 4),
           ),
           border: isAssistant
-              ? Border.all(color: Theme.of(context).colorScheme.outlineVariant)
+              ? Border.all(color: theme.colorScheme.outlineVariant)
               : null,
         ),
         child: Row(
@@ -192,13 +211,13 @@ class _ChatBubble extends StatelessWidget {
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.10),
+                  color: primaryColor.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.support_agent_rounded,
                   size: 17,
-                  color: AppColors.primary,
+                  color: primaryColor,
                 ),
               ),
               const SizedBox(width: 10),
@@ -210,8 +229,8 @@ class _ChatBubble extends StatelessWidget {
                   fontSize: 16,
                   height: 1.45,
                   color: isAssistant
-                      ? Theme.of(context).colorScheme.onSurface
-                      : Colors.white,
+                      ? theme.colorScheme.onSurface
+                      : (isDark ? Colors.black : Colors.white),
                 ),
               ),
             ),

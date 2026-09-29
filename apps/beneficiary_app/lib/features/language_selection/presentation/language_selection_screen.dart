@@ -1,3 +1,6 @@
+import 'package:beneficiary_app/core/preferences/app_settings_scope.dart';
+import 'package:beneficiary_app/core/widgets/app_logo.dart';
+import 'package:beneficiary_app/l10n/app_localizations.dart';
 import 'package:beneficiary_app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,13 +16,28 @@ class LanguageSelectionScreen extends StatefulWidget {
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   int? _selectedLanguage;
 
-  final List<LanguageOption> _languages = const [
-    LanguageOption(name: 'English', nativeName: 'English'),
-    LanguageOption(name: 'Hindi', nativeName: 'हिन्दी'),
-    LanguageOption(name: 'Bengali', nativeName: 'বাংলা'),
-    LanguageOption(name: 'Santhali', nativeName: 'ᱥᱟᱱᱛᱟᱲᱤ'),
-    LanguageOption(name: 'Mundari', nativeName: 'ᱢᱩᱱᱰᱟᱹᱨᱤ'),
+  static const List<LanguageItem> _languages = [
+    LanguageItem(name: 'English', nativeName: 'English', locale: Locale('en')),
+    LanguageItem(name: 'Hindi', nativeName: 'हिन्दी', locale: Locale('hi')),
+    LanguageItem(name: 'Bengali', nativeName: 'বাংলা', locale: Locale('bn')),
+    LanguageItem(name: 'Santhali', nativeName: 'ᱥᱟᱱᱛᱟᱲᱤ', locale: Locale('sat')),
+    LanguageItem(name: 'Mundari', nativeName: 'ᱢᱩᱱᱰᱟᱹᱨᱤ', locale: Locale('unr')),
   ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_selectedLanguage == null) {
+      final settings = AppSettingsScope.maybeOf(context);
+      if (settings != null) {
+        final currentCode = settings.locale.languageCode;
+        final index = _languages.indexWhere((l) => l.locale.languageCode == currentCode);
+        if (index != -1) {
+          _selectedLanguage = index;
+        }
+      }
+    }
+  }
 
   void _selectLanguage(int index) {
     setState(() {
@@ -32,66 +50,83 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       return;
     }
 
+    final selectedLocale = _languages[_selectedLanguage!].locale;
+    final settings = AppSettingsScope.of(context);
+    settings.setLocale(selectedLocale);
+
     context.go('/home');
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Use translations for the currently highlighted/selected language
+    final effectiveLocale = _selectedLanguage != null
+        ? _languages[_selectedLanguage!].locale
+        : (AppSettingsScope.maybeOf(context)?.locale ?? const Locale('en'));
+    final l10n = lookupAppLocalizations(effectiveLocale);
+
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Small app identity
                     Row(
                       children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.10),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.handshake_rounded,
-                            color: AppColors.primary,
-                            size: 24,
-                          ),
+                        const AppLogo(
+                          size: 44,
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Kaushal Saathi',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          l10n.appName,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: isDark
+                                ? AppColors.primaryLight
+                                : AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 42),
+                    const SizedBox(height: 36),
 
-                    // Heading
-                    Text(
-                      'Choose your language',
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                    // Heading in currently selected language
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: Align(
+                        key: ValueKey('heading_${effectiveLocale.languageCode}'),
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          l10n.chooseLanguage,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 10),
 
-                    Text(
-                      'Select the language you are most comfortable with. '
-                      'You can change it later from Settings.',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        height: 1.5,
+                    // Subtitle in currently selected language
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: Text(
+                        l10n.chooseLanguageSubtitle,
+                        key: ValueKey('sub_${effectiveLocale.languageCode}'),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.5,
+                        ),
                       ),
                     ),
 
@@ -113,38 +148,53 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       );
                     }),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
 
-                    // Helper text
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.info_outline_rounded,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    // Helper text in currently selected language
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? theme.colorScheme.surface
+                            : const Color(0xFFF3F6F2),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: theme.colorScheme.outlineVariant,
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'The assistant will use your selected '
-                            'language when talking with you.',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline_rounded,
+                            size: 20,
+                            color: isDark
+                                ? AppColors.primaryLight
+                                : AppColors.primary,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 200),
+                              child: Text(
+                                l10n.assistantLanguageNotice,
+                                key: ValueKey('info_${effectiveLocale.languageCode}'),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
 
-            // Continue button
+            // Continue button in currently selected language
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
               child: SizedBox(
@@ -152,7 +202,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 height: 56,
                 child: ElevatedButton(
                   onPressed: _selectedLanguage == null ? null : _continue,
-                  child: const Text('Continue'),
+                  child: Text(l10n.continueText),
                 ),
               ),
             ),
@@ -164,7 +214,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
 }
 
 class _LanguageCard extends StatelessWidget {
-  final LanguageOption language;
+  final LanguageItem language;
   final bool selected;
   final VoidCallback onTap;
 
@@ -176,7 +226,11 @@ class _LanguageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
 
     return Material(
       color: Colors.transparent,
@@ -186,14 +240,16 @@ class _LanguageCard extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
             color: selected
-                ? AppColors.primary.withValues(alpha: 0.08)
+                ? (isDark
+                    ? AppColors.primaryLight.withValues(alpha: 0.15)
+                    : AppColors.primary.withValues(alpha: 0.08))
                 : colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: selected ? AppColors.primary : colorScheme.outlineVariant,
+              color: selected ? primaryColor : colorScheme.outlineVariant,
               width: selected ? 2 : 1,
             ),
           ),
@@ -204,13 +260,17 @@ class _LanguageCard extends StatelessWidget {
                 height: 46,
                 decoration: BoxDecoration(
                   color: selected
-                      ? AppColors.primary
-                      : AppColors.primary.withValues(alpha: 0.08),
+                      ? primaryColor
+                      : (isDark
+                          ? AppColors.primaryLight.withValues(alpha: 0.12)
+                          : AppColors.primary.withValues(alpha: 0.08)),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.language_rounded,
-                  color: selected ? Colors.white : AppColors.primary,
+                  color: selected
+                      ? (isDark ? Colors.black : Colors.white)
+                      : primaryColor,
                   size: 23,
                 ),
               ),
@@ -223,9 +283,10 @@ class _LanguageCard extends StatelessWidget {
                   children: [
                     Text(
                       language.nativeName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
+                        color: selected ? primaryColor : colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -246,14 +307,18 @@ class _LanguageCard extends StatelessWidget {
                 height: 26,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: selected ? AppColors.primary : Colors.transparent,
+                  color: selected ? primaryColor : Colors.transparent,
                   border: Border.all(
-                    color: selected ? AppColors.primary : colorScheme.outline,
+                    color: selected ? primaryColor : colorScheme.outline,
                     width: 2,
                   ),
                 ),
                 child: selected
-                    ? const Icon(Icons.check, size: 17, color: Colors.white)
+                    ? Icon(
+                        Icons.check,
+                        size: 17,
+                        color: isDark ? Colors.black : Colors.white,
+                      )
                     : null,
               ),
             ],
@@ -264,9 +329,14 @@ class _LanguageCard extends StatelessWidget {
   }
 }
 
-class LanguageOption {
+class LanguageItem {
   final String name;
   final String nativeName;
+  final Locale locale;
 
-  const LanguageOption({required this.name, required this.nativeName});
+  const LanguageItem({
+    required this.name,
+    required this.nativeName,
+    required this.locale,
+  });
 }

@@ -1,3 +1,4 @@
+import 'package:beneficiary_app/l10n/app_localizations.dart';
 import 'package:beneficiary_app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -17,31 +20,40 @@ class HomeScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHeader(context),
+                    _buildHeader(context, l10n),
 
                     const SizedBox(height: 24),
 
-                    _buildAssistantCard(context),
+                    _buildAssistantCard(context, l10n),
 
                     const SizedBox(height: 28),
 
-                    _buildSectionTitle(context, 'What are you looking for?'),
+                    _buildSectionTitle(
+                      context,
+                      l10n?.whatAreYouLookingFor ?? 'What are you looking for?',
+                    ),
 
                     const SizedBox(height: 14),
 
-                    _buildQuickActions(context),
+                    _buildQuickActions(context, l10n),
 
                     const SizedBox(height: 28),
 
-                    _buildSectionTitle(context, 'Opportunities near you'),
+                    _buildSectionTitle(
+                      context,
+                      l10n?.opportunitiesNearYou ?? 'Opportunities near you',
+                    ),
 
                     const SizedBox(height: 14),
 
                     _buildOpportunityCard(
                       context,
                       icon: Icons.content_cut_rounded,
-                      title: 'Tailoring & Stitching',
-                      subtitle: 'Skill training',
+                      title: l10n?.tailoringStitching ?? 'Tailoring & Stitching',
+                      subtitle: l10n?.skillTraining ?? 'Skill training',
+                      onTap: () {
+                        context.push('/training');
+                      },
                     ),
 
                     const SizedBox(height: 12),
@@ -49,8 +61,11 @@ class HomeScreen extends StatelessWidget {
                     _buildOpportunityCard(
                       context,
                       icon: Icons.agriculture_rounded,
-                      title: 'Modern Farming',
-                      subtitle: 'Training & livelihood',
+                      title: l10n?.modernFarming ?? 'Modern Farming',
+                      subtitle: l10n?.trainingLivelihood ?? 'Training & livelihood',
+                      onTap: () {
+                        context.push('/training');
+                      },
                     ),
 
                     const SizedBox(height: 12),
@@ -58,30 +73,41 @@ class HomeScreen extends StatelessWidget {
                     _buildOpportunityCard(
                       context,
                       icon: Icons.storefront_rounded,
-                      title: 'Small Business',
-                      subtitle: 'Enterprise opportunities',
+                      title: l10n?.smallBusiness ?? 'Small Business',
+                      subtitle:
+                          l10n?.enterpriseOpportunities ?? 'Enterprise opportunities',
+                      onTap: () {
+                        context.push('/training');
+                      },
                     ),
 
                     const SizedBox(height: 28),
 
-                    _buildSectionTitle(context, 'Your progress'),
+                    _buildSectionTitle(
+                      context,
+                      l10n?.yourProgress ?? 'Your progress',
+                    ),
 
                     const SizedBox(height: 14),
 
-                    _buildProgressCard(context),
+                    _buildProgressCard(context, l10n),
                   ],
                 ),
               ),
             ),
 
-            _buildBottomNavigation(context),
+            _buildBottomNavigation(context, l10n),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, AppLocalizations? l10n) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return Row(
       children: [
         Expanded(
@@ -89,15 +115,15 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Namaste!',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                l10n?.namaste ?? 'Namaste!',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                'How can we help you today?',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                l10n?.homeGreeting ?? 'How can we help you today?',
+                style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -107,23 +133,30 @@ class HomeScreen extends StatelessWidget {
 
         const SizedBox(width: 12),
 
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.10),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.person_outline_rounded,
-            color: AppColors.primary,
+        GestureDetector(
+          onTap: () {
+            context.push('/profile');
+          },
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.person_outline_rounded,
+              color: primaryColor,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildAssistantCard(BuildContext context) {
+  Widget _buildAssistantCard(BuildContext context, AppLocalizations? l10n) {
+    final theme = Theme.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
@@ -154,8 +187,8 @@ class HomeScreen extends StatelessWidget {
 
               Expanded(
                 child: Text(
-                  'Talk to Saathi',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  l10n?.talkToSaathi ?? 'Talk to Saathi',
+                  style: theme.textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -167,10 +200,9 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           Text(
-            'Tell us what you are interested in. '
-            'We can help you find suitable skills, '
-            'training and livelihood opportunities.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            l10n?.assistantDescription ??
+                'Tell us what you are interested in. We can help you find suitable skills, training and livelihood opportunities.',
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.92),
               height: 1.5,
             ),
@@ -186,7 +218,7 @@ class HomeScreen extends StatelessWidget {
                 context.push('/assistant');
               },
               icon: const Icon(Icons.mic_rounded),
-              label: const Text('Start talking'),
+              label: Text(l10n?.startTalking ?? 'Start talking'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: AppColors.primary,
@@ -208,13 +240,13 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
+  Widget _buildQuickActions(BuildContext context, AppLocalizations? l10n) {
     return Row(
       children: [
         Expanded(
           child: _QuickActionCard(
             icon: Icons.school_outlined,
-            title: 'Find training',
+            title: l10n?.findTraining ?? 'Find training',
             onTap: () {
               context.push('/training');
             },
@@ -226,8 +258,10 @@ class HomeScreen extends StatelessWidget {
         Expanded(
           child: _QuickActionCard(
             icon: Icons.work_outline_rounded,
-            title: 'Find work',
-            onTap: () {},
+            title: l10n?.findWork ?? 'Find work',
+            onTap: () {
+              context.push('/training');
+            },
           ),
         ),
       ],
@@ -239,19 +273,24 @@ class HomeScreen extends StatelessWidget {
     required IconData icon,
     required String title,
     required String subtitle,
+    required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
+              color: theme.colorScheme.outlineVariant,
             ),
           ),
           child: Row(
@@ -260,10 +299,10 @@ class HomeScreen extends StatelessWidget {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
+                  color: primaryColor.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: AppColors.primary, size: 26),
+                child: Icon(icon, color: primaryColor, size: 26),
               ),
 
               const SizedBox(width: 14),
@@ -284,7 +323,7 @@ class HomeScreen extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -299,14 +338,18 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressCard(BuildContext context) {
+  Widget _buildProgressCard(BuildContext context, AppLocalizations? l10n) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -319,16 +362,12 @@ class HomeScreen extends StatelessWidget {
                 CircularProgressIndicator(
                   value: 0.35,
                   strokeWidth: 6,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppColors.primary,
-                  ),
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
                 ),
-                const Text(
-                  '35%',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                Text(
+                  l10n?.progressPercentage ?? '35%',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -340,17 +379,17 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Your journey',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                Text(
+                  l10n?.yourJourney ?? 'Your journey',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  'Complete your profile to get '
-                  'better recommendations.',
+                  l10n?.completeProfileRecommendation ??
+                      'Complete your profile to get better recommendations.',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: theme.colorScheme.onSurfaceVariant,
                     height: 1.4,
                   ),
                 ),
@@ -362,12 +401,14 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNavigation(BuildContext context) {
+  Widget _buildBottomNavigation(BuildContext context, AppLocalizations? l10n) {
+    final theme = Theme.of(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: theme.colorScheme.surface,
         border: Border(
-          top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+          top: BorderSide(color: theme.colorScheme.outlineVariant),
         ),
       ),
       child: SafeArea(
@@ -379,7 +420,7 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: _NavItem(
                   icon: Icons.home_rounded,
-                  label: 'Home',
+                  label: l10n?.home ?? 'Home',
                   selected: true,
                   onTap: () {},
                 ),
@@ -388,7 +429,7 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: _NavItem(
                   icon: Icons.mic_none_rounded,
-                  label: 'Assistant',
+                  label: l10n?.assistant ?? 'Assistant',
                   onTap: () {
                     context.push('/assistant');
                   },
@@ -398,7 +439,7 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: _NavItem(
                   icon: Icons.school_outlined,
-                  label: 'Training',
+                  label: l10n?.training ?? 'Training',
                   onTap: () {
                     context.push('/training');
                   },
@@ -408,7 +449,7 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: _NavItem(
                   icon: Icons.person_outline_rounded,
-                  label: 'Profile',
+                  label: l10n?.profile ?? 'Profile',
                   onTap: () {
                     context.push('/profile');
                   },
@@ -435,8 +476,12 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -447,14 +492,14 @@ class _QuickActionCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
+              color: theme.colorScheme.outlineVariant,
             ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: AppColors.primary, size: 27),
+              Icon(icon, color: primaryColor, size: 27),
               const SizedBox(height: 8),
               Text(
                 title,
@@ -486,6 +531,10 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return InkWell(
       onTap: onTap,
       child: Column(
@@ -495,8 +544,8 @@ class _NavItem extends StatelessWidget {
             icon,
             size: 24,
             color: selected
-                ? AppColors.primary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+                ? primaryColor
+                : theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 4),
           Text(
@@ -505,8 +554,8 @@ class _NavItem extends StatelessWidget {
               fontSize: 12,
               fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
               color: selected
-                  ? AppColors.primary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ? primaryColor
+                  : theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],

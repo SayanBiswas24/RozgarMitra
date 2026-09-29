@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'app/app.dart';
+import 'core/preferences/app_settings.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(const KaushalSaathiApp());
+  final settings = await AppSettings.load();
+
+  runApp(KaushalSaathiApp(settings: settings));
 }

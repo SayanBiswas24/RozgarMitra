@@ -1,3 +1,4 @@
+import 'package:beneficiary_app/l10n/app_localizations.dart';
 import 'package:beneficiary_app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -7,16 +8,21 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Profile'),
+        title: Text(l10n?.profile ?? 'My Profile'),
         actions: [
           IconButton(
             onPressed: () {
               context.push('/settings');
             },
             icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
+            tooltip: l10n?.settings ?? 'Settings',
           ),
         ],
       ),
@@ -27,59 +33,63 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               child: Column(
                 children: [
-                  _buildProfileHeader(context),
+                  _buildProfileHeader(context, l10n),
 
                   const SizedBox(height: 28),
 
-                  _buildSectionTitle(context, 'About you'),
+                  _buildSectionTitle(context, l10n?.aboutYou ?? 'About you'),
 
                   const SizedBox(height: 12),
 
                   _ProfileItem(
                     icon: Icons.school_outlined,
-                    title: 'Education',
-                    value: 'Not added yet',
+                    title: l10n?.education ?? 'Education',
+                    value: l10n?.notAddedYet ?? 'Not added yet',
                     onTap: () {},
                   ),
 
                   _ProfileItem(
                     icon: Icons.work_outline_rounded,
-                    title: 'Current occupation',
-                    value: 'Not added yet',
+                    title: l10n?.currentOccupation ?? 'Current occupation',
+                    value: l10n?.notAddedYet ?? 'Not added yet',
                     onTap: () {},
                   ),
 
                   _ProfileItem(
                     icon: Icons.handyman_outlined,
-                    title: 'Skills',
-                    value: 'Add your skills',
+                    title: l10n?.skills ?? 'Skills',
+                    value: l10n?.addYourSkills ?? 'Add your skills',
                     onTap: () {},
                   ),
 
                   _ProfileItem(
                     icon: Icons.favorite_border_rounded,
-                    title: 'Interests',
-                    value: 'Tell us what you like',
+                    title: l10n?.interests ?? 'Interests',
+                    value: l10n?.tellUsWhatYouLike ?? 'Tell us what you like',
                     onTap: () {},
                   ),
 
                   _ProfileItem(
                     icon: Icons.location_on_outlined,
-                    title: 'Location',
-                    value: 'Not added yet',
+                    title: l10n?.location ?? 'Location',
+                    value: l10n?.notAddedYet ?? 'Not added yet',
                     onTap: () {},
                   ),
 
                   const SizedBox(height: 28),
 
-                  _buildSectionTitle(context, 'Work preferences'),
+                  _buildSectionTitle(
+                    context,
+                    l10n?.workPreferences ?? 'Work preferences',
+                  ),
 
                   const SizedBox(height: 12),
 
                   _PreferenceCard(
                     icon: Icons.business_center_outlined,
-                    title: 'What kind of work do you prefer?',
-                    value: 'Not selected',
+                    title: l10n?.whatKindOfWork ??
+                        'What kind of work do you prefer?',
+                    value: l10n?.notSelected ?? 'Not selected',
                     onTap: () {},
                   ),
 
@@ -87,57 +97,61 @@ class ProfileScreen extends StatelessWidget {
 
                   _PreferenceCard(
                     icon: Icons.directions_walk_outlined,
-                    title: 'How far can you travel?',
-                    value: 'Not selected',
+                    title: l10n?.howFarCanYouTravel ?? 'How far can you travel?',
+                    value: l10n?.notSelected ?? 'Not selected',
                     onTap: () {},
                   ),
 
                   const SizedBox(height: 28),
 
-                  _buildCompletionCard(context),
+                  _buildCompletionCard(context, l10n, primaryColor),
                 ],
               ),
             ),
           ),
 
-          _buildBottomNavigation(context),
+          _buildBottomNavigation(context, l10n),
         ],
       ),
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context) {
+  Widget _buildProfileHeader(BuildContext context, AppLocalizations? l10n) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return Column(
       children: [
         Container(
           width: 88,
           height: 88,
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.10),
+            color: primaryColor.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
+          child: Icon(
             Icons.person_rounded,
             size: 48,
-            color: AppColors.primary,
+            color: primaryColor,
           ),
         ),
 
         const SizedBox(height: 14),
 
-        const Text(
-          'Your Profile',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        Text(
+          l10n?.profile ?? 'Your Profile',
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
 
         const SizedBox(height: 6),
 
         Text(
-          'Add some information about yourself '
-          'to get better recommendations.',
+          l10n?.completeProfileRecommendation ??
+              'Add some information about yourself to get better recommendations.',
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
             height: 1.5,
           ),
         ),
@@ -157,33 +171,39 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCompletionCard(BuildContext context) {
+  Widget _buildCompletionCard(
+    BuildContext context,
+    AppLocalizations? l10n,
+    Color primaryColor,
+  ) {
+    final theme = Theme.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
+        color: primaryColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.info_outline_rounded, color: AppColors.primary),
+              Icon(Icons.info_outline_rounded, color: primaryColor),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Complete your profile',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  l10n?.completeYourProfile ?? 'Complete your profile',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
               Text(
                 '20%',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: primaryColor,
                 ),
               ),
             ],
@@ -193,22 +213,21 @@ class ProfileScreen extends StatelessWidget {
 
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: const LinearProgressIndicator(
+            child: LinearProgressIndicator(
               value: 0.20,
               minHeight: 8,
-              backgroundColor: Color(0xFFE0E0E0),
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
             ),
           ),
 
           const SizedBox(height: 12),
 
           Text(
-            'A more complete profile will help Saathi '
-            'suggest training and livelihood options '
-            'that better match your needs.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            l10n?.profileHelpText ??
+                'A more complete profile will help Saathi suggest training and livelihood options that better match your needs.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
               height: 1.4,
             ),
           ),
@@ -217,12 +236,14 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNavigation(BuildContext context) {
+  Widget _buildBottomNavigation(BuildContext context, AppLocalizations? l10n) {
+    final theme = Theme.of(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: theme.colorScheme.surface,
         border: Border(
-          top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+          top: BorderSide(color: theme.colorScheme.outlineVariant),
         ),
       ),
       child: SafeArea(
@@ -234,7 +255,7 @@ class ProfileScreen extends StatelessWidget {
               Expanded(
                 child: _NavItem(
                   icon: Icons.home_outlined,
-                  label: 'Home',
+                  label: l10n?.home ?? 'Home',
                   onTap: () {
                     context.go('/home');
                   },
@@ -243,7 +264,7 @@ class ProfileScreen extends StatelessWidget {
               Expanded(
                 child: _NavItem(
                   icon: Icons.mic_none_rounded,
-                  label: 'Assistant',
+                  label: l10n?.assistant ?? 'Assistant',
                   onTap: () {
                     context.push('/assistant');
                   },
@@ -252,7 +273,7 @@ class ProfileScreen extends StatelessWidget {
               Expanded(
                 child: _NavItem(
                   icon: Icons.school_outlined,
-                  label: 'Training',
+                  label: l10n?.training ?? 'Training',
                   onTap: () {
                     context.push('/training');
                   },
@@ -261,7 +282,7 @@ class ProfileScreen extends StatelessWidget {
               Expanded(
                 child: _NavItem(
                   icon: Icons.person_rounded,
-                  label: 'Profile',
+                  label: l10n?.profile ?? 'Profile',
                   selected: true,
                   onTap: () {},
                 ),
@@ -289,8 +310,12 @@ class _ProfileItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: theme.colorScheme.surface,
       child: InkWell(
         onTap: onTap,
         child: Container(
@@ -298,7 +323,7 @@ class _ProfileItem extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
+                color: theme.colorScheme.outlineVariant,
               ),
             ),
           ),
@@ -308,10 +333,10 @@ class _ProfileItem extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
+                  color: primaryColor.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: AppColors.primary, size: 23),
+                child: Icon(icon, color: primaryColor, size: 23),
               ),
 
               const SizedBox(width: 14),
@@ -332,7 +357,7 @@ class _ProfileItem extends StatelessWidget {
                       value,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -341,7 +366,7 @@ class _ProfileItem extends StatelessWidget {
 
               Icon(
                 Icons.chevron_right_rounded,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ],
           ),
@@ -366,8 +391,12 @@ class _PreferenceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -377,12 +406,12 @@ class _PreferenceCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
+              color: theme.colorScheme.outlineVariant,
             ),
           ),
           child: Row(
             children: [
-              Icon(icon, color: AppColors.primary, size: 25),
+              Icon(icon, color: primaryColor, size: 25),
 
               const SizedBox(width: 14),
 
@@ -402,7 +431,7 @@ class _PreferenceCard extends StatelessWidget {
                       value,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -433,6 +462,10 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return InkWell(
       onTap: onTap,
       child: Column(
@@ -442,8 +475,8 @@ class _NavItem extends StatelessWidget {
             icon,
             size: 24,
             color: selected
-                ? AppColors.primary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+                ? primaryColor
+                : theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 4),
           Text(
@@ -452,8 +485,8 @@ class _NavItem extends StatelessWidget {
               fontSize: 12,
               fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
               color: selected
-                  ? AppColors.primary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ? primaryColor
+                  : theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
